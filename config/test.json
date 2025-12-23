@@ -1,0 +1,15 @@
+{
+  "server": {
+    "port": 3001
+  },
+  "database": {
+    "port": 5433,
+    "database": "urlshortener_test",
+    "migrations": {
+      "apply": true
+    }
+  },
+  "logging": {
+    "level": "warning"
+  }
+}

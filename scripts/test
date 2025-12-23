@@ -1,0 +1,6 @@
+#!/bin/bash
+# Node's test framework requires the arguments to be before the test path, meaning they cannot simply be appened after npm test,
+# i.e. npm test -- --test-name-pattern foo
+# Removing the test path results in Node's test framework running tests twice, once in the test directory and agains in the dist/test directory
+# This wrapper script works around these limitations
+APP_ENV=test node --test --test-concurrency=1 --test-timeout=1000 --import tsx --test-name-pattern="$1" test/**/*.test.ts
