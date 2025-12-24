@@ -1,6 +1,7 @@
 import { type ServerType, serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { errorHandler } from '../middleware/ErrorHandler.js';
+import createRedirectRoutes from '../routes/redirect.js';
 import createStatusRoutes from '../routes/status.js';
 import CommandQueue from './CommandQueue.js';
 import type Database from './Database.js';
@@ -23,6 +24,7 @@ export default class WebServer {
     this.app = new Hono();
     this.app.onError(errorHandler);
     this.app.route('/__', createStatusRoutes(database));
+    this.app.route('/', createRedirectRoutes());
   }
 
   getApp(): Hono {
@@ -47,8 +49,8 @@ export default class WebServer {
           port: this.config.port,
           hostname: this.config.host,
         },
-        (info) => resolve(info)
-      )
+        (info) => resolve(info),
+      );
     });
   }
 

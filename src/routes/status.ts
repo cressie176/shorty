@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import type Database from '../infra/Database.js';
 import { ServiceUnavailableError } from '../errors/index.js';
+import type Database from '../infra/Database.js';
 
 export default function createStatusRoutes(database: Database) {
   const app = new Hono();

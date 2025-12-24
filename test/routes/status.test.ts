@@ -1,5 +1,5 @@
-import { after, before, beforeEach, describe, it } from 'node:test';
 import { equal as eq } from 'node:assert/strict';
+import { after, before, beforeEach, describe, it } from 'node:test';
 import Application from '../../src/infra/Application.js';
 import Configuration from '../../src/infra/Configuration.js';
 import WebServer from '../../src/infra/WebServer.js';

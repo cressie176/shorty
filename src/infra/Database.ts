@@ -52,7 +52,7 @@ export default class Database {
     if (!this.pool) throw new Error('Database has not been started');
     await this.withClient((client) => {
       return client.query('SELECT 1');
-    })
+    });
   }
 
   protected async withClient<T>(cb: (client: pg.PoolClient) => Promise<T>): Promise<T> {

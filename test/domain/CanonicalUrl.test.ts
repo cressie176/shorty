@@ -1,5 +1,5 @@
-import { describe, it } from 'node:test';
 import { equal as eq, throws } from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import CanonicalUrl from '../../src/domain/CanonicalUrl.js';
 import { ValidationError } from '../../src/errors/index.js';
 
@@ -41,8 +41,11 @@ describe('CanonicalUrl', () => {
   });
 
   it('throws ValidationError for invalid URLs', () => {
-    throws(() => new CanonicalUrl('not a url'), (err: Error) => {
-      return err instanceof ValidationError;
-    });
+    throws(
+      () => new CanonicalUrl('not a url'),
+      (err: Error) => {
+        return err instanceof ValidationError;
+      },
+    );
   });
 });

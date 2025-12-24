@@ -1,7 +1,7 @@
 import CommandQueue from './CommandQueue.js';
 import type Database from './Database.js';
-import type WebServer from './WebServer.js';
 import { logger } from './Logger.js';
+import type WebServer from './WebServer.js';
 
 export enum Events {
   LOG = 'LOG',
