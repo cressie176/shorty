@@ -29,9 +29,8 @@ Create the project structure and infrastructure
 - When the healthcheck fails (e.g., database connection fails), log the detailed error to application logs but only respond to the client with a generic 'Service Unavailable' message and 503 status code to avoid leaking infrastructure details
 - The README covers all functionality described in this story, i.e.
   - What the service does
-  - How to maintain it (what the scripts do etc)
-  - The configuration (up to this point)
-  - The API (up to this point)
+  - How to maintain the service (what the scripts do etc)
+  - The README covers the API, behaviour and configuration up to this point
 
 #### API Specification
 ```
@@ -68,9 +67,7 @@ Shortens the given URL
 - The short key must be URL safe
 - The short key must not contain rude words
 - The short key must be 12 characters max
-- The README covers all functionality described in this story, i.e.
-  - The short key constraints
-  - The API (up to this point)
+- The README covers the API, behaviour and configuration up to this point
 
 #### API Specification
 ```
@@ -96,6 +93,14 @@ POST /redirect
 }
 ```
 
+*409 Conflict*
+```json
+{
+  "message": "Collision detected for key 'ABC123'",
+  "code": "KEY_COLLISION"
+}
+```
+
 #### Implementation Notes
 - This story focuses on the domain logic for generating short keys and canonicalising URLs
 - Persistence is not required in this story - it will be added in Story 3
@@ -109,6 +114,7 @@ POST /redirect
 **Redirect domain class**
 - Has a key property (string) containing the generated short key
 - Has a url property (CanonicalUrl) containing the canonicalised URL
+- Has a toJSON method that returns a plain object suitable for JSON serialisation with properties: key (string) and url (string)
 
 **Redirect service**
 - Generates URL-safe short keys with maximum length of 12 characters
@@ -129,8 +135,7 @@ Returns a URL for the given short key
 #### Acceptance Criteria
 - Returns the canonical URL associated with the given short key
 - Responds with 404 for unknown short keys
-- The README covers all functionality described in this story, i.e.
-  - The API (up to this point)
+- The README covers the API, behaviour and configuration up to this point
 
 #### API Specification
 ```
@@ -187,6 +192,7 @@ Redirect requests for a short key to the canonicalised URL
 - Redirects HTTP requests for a known short key to the canonicalised URL using a 302 Found status
 - Responds with 404 for unknown short keys
 - When storing redirects, if a key collision occurs (same key generated for different URLs), the system must detect this and handle it appropriately (this should be extremely rare given proper key generation)
+- The README covers the API, behaviour and configuration up to this point
 
 #### API Specification
 ```
@@ -249,6 +255,7 @@ Automatically delete expired redirects
 - Expired redirects are eventually deleted from the database
 - If an expired redirect is being deleted at the same time that a new redirect with the same URL is being stored, the end result must be that the new redirect exists in the database with a fresh expiry timestamp
 - Write a concurrency test that simulates this race condition by running both operations simultaneously and verifying the redirect exists afterwards
+- The README covers the API, behaviour and configuration up to this point
 
 #### Implementation Notes
 - Create a stored procedure called `delete_expired_redirects` that:
