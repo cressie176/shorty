@@ -11,10 +11,13 @@ export default function createRedirectRoutes() {
     const canonicalUrl = new CanonicalUrl(url);
     const shortKey = new ShortKey();
 
-    return c.json({
-      key: shortKey.toString(),
-      url: canonicalUrl.toString(),
-    }, 201);
+    return c.json(
+      {
+        key: shortKey.toString(),
+        url: canonicalUrl.toString(),
+      },
+      201,
+    );
   });
 
   return app;
