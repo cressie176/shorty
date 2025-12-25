@@ -1,29 +1,39 @@
 services:
   postgres:
-    image: postgres:18-alpine
-    container_name: url-shortener-db
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.postgres
+    container_name: shorty-db
     environment:
-      POSTGRES_USER: urlshortener
-      POSTGRES_PASSWORD: urlshortener
-      POSTGRES_DB: urlshortener
+      POSTGRES_USER: shorty
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: shorty
       PGDATA: /tmp/pgdata
     ports:
       - "5432:5432"
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=1g
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_preload_libraries=pg_cron"
+      - "-c"
+      - "cron.database_name=shorty"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U urlshortener"]
+      test: ["CMD-SHELL", "pg_isready -U shorty"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   postgres-test:
-    image: postgres:18-alpine
-    container_name: url-shortener-db-test
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.postgres
+    container_name: shorty-db-test
     environment:
-      POSTGRES_USER: urlshortener
-      POSTGRES_PASSWORD: urlshortener
-      POSTGRES_DB: urlshortener_test
+      POSTGRES_USER: shorty
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: shorty
       PGDATA: /tmp/pgdata
     ports:
       - "5433:5432"
@@ -32,9 +42,13 @@ services:
     command:
       - "postgres"
       - "-c"
+      - "shared_preload_libraries=pg_cron"
+      - "-c"
+      - "cron.database_name=shorty"
+      - "-c"
       - "app.allow_nuke=true"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U urlshortener"]
+      test: ["CMD-SHELL", "pg_isready -U shorty"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -1,16 +1,15 @@
 import type CanonicalUrl from './CanonicalUrl.js';
-import type ShortKey from './ShortKey.js';
 
 export default class Redirect {
-  private readonly key: ShortKey;
+  private readonly key: string;
   private readonly url: CanonicalUrl;
 
-  constructor(key: ShortKey, url: CanonicalUrl) {
+  constructor(key: string, url: CanonicalUrl) {
     this.key = key;
     this.url = url;
   }
 
-  getKey(): ShortKey {
+  getKey(): string {
     return this.key;
   }
 
@@ -20,7 +19,7 @@ export default class Redirect {
 
   toJSON(): { key: string; url: string } {
     return {
-      key: this.key.toString(),
+      key: this.key,
       url: this.url.toString(),
     };
   }

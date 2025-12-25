@@ -5,6 +5,7 @@ import Configuration from '../../src/infra/Configuration.js';
 import WebServer from '../../src/infra/WebServer.js';
 import initLogging from '../../src/init/init-logging.js';
 import initMigrations from '../../src/init/init-migrations.js';
+import RedirectService from '../../src/services/RedirectService.js';
 import TestClient from '../../test-src/TestClient.js';
 import TestDatabase from '../../test-src/TestDatabase.js';
 
@@ -20,7 +21,8 @@ describe('Status Routes', () => {
     await initMigrations(config.database);
 
     database = new TestDatabase({ config: config.database });
-    const server = new WebServer({ config: config.server, database });
+    const redirectService = new RedirectService({ database, redirectConfig: config.redirect });
+    const server = new WebServer({ config: config.server, database, redirectService });
 
     application = new Application({ database, server });
     await application.start();

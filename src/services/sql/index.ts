@@ -7,3 +7,4 @@ const __dirname = dirname(__filename);
 
 export const STORE_REDIRECT_SQL = readFileSync(join(__dirname, 'store-redirect.sql'), 'utf-8');
 export const GET_REDIRECT_SQL = readFileSync(join(__dirname, 'get-redirect.sql'), 'utf-8');
+export const DELETE_EXPIRED_REDIRECTS_SQL = readFileSync(join(__dirname, 'delete-expired-redirects.sql'), 'utf-8');

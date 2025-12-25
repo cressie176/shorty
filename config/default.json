@@ -5,9 +5,9 @@
   "database": {
     "host": "localhost",
     "port": 5432,
-    "database": "urlshortener",
-    "user": "urlshortener",
-    "password": "urlshortener",
+    "database": "shorty",
+    "user": "shorty",
+    "password": "password",
     "min": 1,
     "max": 10,
     "idleTimeoutMillis": 30000,

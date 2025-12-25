@@ -4,7 +4,6 @@
   },
   "database": {
     "port": 5433,
-    "database": "urlshortener_test",
     "migrations": {
       "apply": true
     }

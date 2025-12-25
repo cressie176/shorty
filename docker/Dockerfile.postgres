@@ -1,0 +1,16 @@
+FROM postgres:18-alpine
+
+# Install build dependencies and pg_cron
+RUN apk add --no-cache --virtual .build-deps \
+    git \
+    make \
+    gcc \
+    musl-dev \
+    postgresql-dev \
+    && git clone https://github.com/citusdata/pg_cron.git /tmp/pg_cron \
+    && cd /tmp/pg_cron \
+    && make with_llvm=no USE_PGXS=1 \
+    && make with_llvm=no USE_PGXS=1 install \
+    && cd / \
+    && rm -rf /tmp/pg_cron \
+    && apk del .build-deps
