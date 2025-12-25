@@ -264,3 +264,21 @@ Automatically delete expired redirects
 - Configure pg_cron to invoke this stored procedure at hourly intervals
 - In tests, invoke the stored procedure directly to verify deletion behaviour. Trust that pg_cron scheduling is configured correctly in production
 - The stored procedure should use appropriate locking or isolation levels to handle concurrent operations safely
+
+### 7. Schedule VACUUM ANALYZE
+Schedule daily VACUUM ANALYZE to maintain PostgreSQL query planner statistics
+
+PostgreSQL only runs autovacuum when the ratio of dead to live tuples reaches a certain threshold. If this service is mostly used by people creating URLs which nobody clicks on (causing the expiry to update), the threshold may never be reached. Without regular statistics updates, PostgreSQL may produce poor query plans that degrade performance.
+
+#### Acceptance Criteria
+- VACUUM ANALYZE runs automatically once per day on the redirect table
+- The operation runs during off-peak hours (e.g., 3am local time)
+- The maintenance task completes successfully without blocking normal operations
+
+#### Implementation Notes
+- Create a stored procedure called `vacuum_analyze_redirects` that executes VACUUM ANALYZE on the redirect table
+- Do NOT use VACUUM FULL as it requires an exclusive lock and will block all operations on the table
+- VACUUM cannot be run inside a transaction block, so the stored procedure must handle this appropriately
+- Configure pg_cron to invoke this stored procedure once daily at 3am
+- In tests, invoke the stored procedure directly to verify it executes without errors. Trust that pg_cron scheduling is configured correctly in production
+- Regular VACUUM ANALYZE does not take table locks that block reads or writes, so it can run safely during normal operations
