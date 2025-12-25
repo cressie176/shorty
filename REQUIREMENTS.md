@@ -273,7 +273,7 @@ PostgreSQL only runs autovacuum when the ratio of dead to live tuples reaches a 
 #### Acceptance Criteria
 - VACUUM ANALYZE runs automatically once per day on the redirect table
 - The operation runs during off-peak hours (e.g., 3am local time)
-- The maintenance task completes successfully without blocking normal operations
+- The README covers the API, behaviour and configuration up to this point
 
 #### Implementation Notes
 - Create a stored procedure called `vacuum_analyze_redirects` that executes VACUUM ANALYZE on the redirect table
