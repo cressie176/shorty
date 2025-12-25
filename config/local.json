@@ -24,5 +24,8 @@
         "messageColor": "white"
       }
     }
+  },
+  "redirect": {
+    "expiryInterval": "10 seconds"
   }
 }

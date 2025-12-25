@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { ServiceUnavailableError } from '../errors/index.js';
 import type Database from '../infra/Database.js';
 
-export default function createStatusRoutes(database: Database) {
+export default function createStatusRoutes({ database }: { database: Database }) {
   const app = new Hono();
 
   app.get('/health', async (c) => {

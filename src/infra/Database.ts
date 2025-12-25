@@ -1,4 +1,3 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
 import pg from 'pg';
 import CommandQueue from './CommandQueue.js';
 import { logger } from './Logger.js';
@@ -7,7 +6,6 @@ export type DatabaseConfig = pg.PoolConfig;
 
 export default class Database {
   protected pool?: pg.Pool;
-  private transactionStorage = new AsyncLocalStorage<pg.PoolClient>();
   private readonly config: DatabaseConfig;
   private readonly commandQueue = new CommandQueue();
   private started = false;
@@ -55,7 +53,7 @@ export default class Database {
     });
   }
 
-  protected async withClient<T>(cb: (client: pg.PoolClient) => Promise<T>): Promise<T> {
+  async withClient<T>(cb: (client: pg.PoolClient) => Promise<T>): Promise<T> {
     if (!this.pool) throw new Error('Database not started');
     const client = await this.pool.connect();
     try {
@@ -63,27 +61,5 @@ export default class Database {
     } finally {
       client.release();
     }
-  }
-
-  async startTransaction<T>(cb: () => Promise<T>): Promise<T> {
-    if (!this.pool) throw new Error('Database not started');
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
-      const result = await this.transactionStorage.run(client, cb);
-      await client.query('COMMIT');
-      return result;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-  }
-
-  async joinTransaction<T>(cb: (client: pg.PoolClient) => Promise<T>): Promise<T> {
-    const existingTransaction = this.transactionStorage.getStore();
-    if (!existingTransaction) throw new Error('No active transaction');
-    return cb(existingTransaction);
   }
 }

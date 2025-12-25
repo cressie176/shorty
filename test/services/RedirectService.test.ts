@@ -21,7 +21,7 @@ describe('RedirectService', () => {
     database = new TestDatabase({ config: config.database });
     await database.start();
 
-    redirectService = new RedirectService({ database });
+    redirectService = new RedirectService({ database, redirectConfig: config.redirect });
   });
 
   beforeEach(async () => {
@@ -35,13 +35,9 @@ describe('RedirectService', () => {
   it('stores a new redirect', async () => {
     const url = new CanonicalUrl('https://example.com/path');
 
-    const stored = await database.startTransaction(async () => {
-      return await redirectService.storeRedirect(url);
-    });
+    const stored = await redirectService.storeRedirect(url);
+    const retrieved = await redirectService.getRedirect(stored.getKey());
 
-    const retrieved = await database.startTransaction(async () => {
-      return await redirectService.getRedirect(stored.getKey());
-    });
     eq(retrieved?.getKey().toString(), stored.getKey().toString());
     eq(retrieved?.getUrl().toString(), 'https://example.com/path');
   });
@@ -49,13 +45,9 @@ describe('RedirectService', () => {
   it('retrieves redirect by key', async () => {
     const url = new CanonicalUrl('https://example.com/test');
 
-    const stored = await database.startTransaction(async () => {
-      return await redirectService.storeRedirect(url);
-    });
+    const stored = await redirectService.storeRedirect(url);
+    const retrieved = await redirectService.getRedirect(stored.getKey());
 
-    const retrieved = await database.startTransaction(async () => {
-      return await redirectService.getRedirect(stored.getKey());
-    });
     eq(retrieved?.getKey().toString(), stored.getKey().toString());
     eq(retrieved?.getUrl().toString(), 'https://example.com/test');
   });
@@ -63,9 +55,7 @@ describe('RedirectService', () => {
   it('returns null for non-existent key', async () => {
     const key = new ShortKey('nonexistent');
 
-    const retrieved = await database.startTransaction(async () => {
-      return await redirectService.getRedirect(key);
-    });
+    const retrieved = await redirectService.getRedirect(key);
 
     eq(retrieved, null);
   });
@@ -73,13 +63,8 @@ describe('RedirectService', () => {
   it('tolerates duplicate URLs', async () => {
     const url = new CanonicalUrl('https://example.com/same');
 
-    const first = await database.startTransaction(async () => {
-      return await redirectService.storeRedirect(url);
-    });
-
-    const second = await database.startTransaction(async () => {
-      return await redirectService.storeRedirect(url);
-    });
+    const first = await redirectService.storeRedirect(url);
+    const second = await redirectService.storeRedirect(url);
 
     eq(second.getKey().toString(), first.getKey().toString());
   });
@@ -87,10 +72,68 @@ describe('RedirectService', () => {
   it('handles concurrent inserts of same URL', async () => {
     const url = new CanonicalUrl('https://example.com/concurrent');
 
-    const results = await Promise.all(Array.from({ length: 100 }, () => database.startTransaction(async () => redirectService.storeRedirect(url))));
+    const results = await Promise.all(Array.from({ length: 100 }, () => redirectService.storeRedirect(url)));
 
     eq(results.length, 100);
     const allSameKey = results.every((r) => r.getKey().toString() === results[0].getKey().toString());
     eq(allSameKey, true);
+  });
+
+  it('returns null for expired redirect', async () => {
+    const url = new CanonicalUrl('https://example.com/expiring');
+
+    const stored = await redirectService.storeRedirect(url);
+
+    await database.withClient(async (client) => {
+      await client.query("UPDATE redirect SET accessed_at = NOW() - INTERVAL '2 seconds' WHERE key = $1", [stored.getKey().toString()]);
+    });
+
+    const retrieved = await redirectService.getRedirect(stored.getKey());
+
+    eq(retrieved, null);
+  });
+
+  it('updates accessed_at when redirect is accessed', async () => {
+    const url = new CanonicalUrl('https://example.com/touched');
+
+    const stored = await redirectService.storeRedirect(url);
+
+    const initialAccessedAt = await database.withClient(async (client) => {
+      const { rows } = await client.query('SELECT accessed_at FROM redirect WHERE key = $1', [stored.getKey().toString()]);
+      return rows[0].accessed_at;
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    await redirectService.getRedirect(stored.getKey());
+
+    const updatedAccessedAt = await database.withClient(async (client) => {
+      const { rows } = await client.query('SELECT accessed_at FROM redirect WHERE key = $1', [stored.getKey().toString()]);
+      return rows[0].accessed_at;
+    });
+
+    eq(updatedAccessedAt > initialAccessedAt, true);
+  });
+
+  it('updates accessed_at when duplicate URL is stored', async () => {
+    const url = new CanonicalUrl('https://example.com/duplicate-touch');
+
+    const first = await redirectService.storeRedirect(url);
+
+    const initialAccessedAt = await database.withClient(async (client) => {
+      const { rows } = await client.query('SELECT accessed_at FROM redirect WHERE key = $1', [first.getKey().toString()]);
+      return rows[0].accessed_at;
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    await redirectService.storeRedirect(url);
+
+    const updatedAccessedAt = await database.withClient(async (client) => {
+      const { rows } = await client.query('SELECT accessed_at FROM redirect WHERE key = $1', [first.getKey().toString()]);
+      return rows[0].accessed_at;
+    });
+
+    eq(updatedAccessedAt > initialAccessedAt, true);
   });
 });

@@ -11,5 +11,8 @@
   },
   "logging": {
     "level": "warning"
+  },
+  "redirect": {
+    "expiryInterval": "1 second"
   }
 }

@@ -4,6 +4,7 @@ import Database from './src/infra/Database.js';
 import WebServer from './src/infra/WebServer.js';
 import initLogging from './src/init/init-logging.js';
 import initMigrations from './src/init/init-migrations.js';
+import RedirectService from './src/services/RedirectService.js';
 
 const config = Configuration.load(['config/default.json', `config/${process.env.APP_ENV || 'local'}.json`, `config/secrets.json`, 'config/runtime.json']);
 
@@ -11,7 +12,8 @@ await initLogging(config.logging);
 await initMigrations(config.database);
 
 const database = new Database({ config: config.database });
-const server = new WebServer({ config: config.server, database });
+const redirectService = new RedirectService({ database, redirectConfig: config.redirect });
+const server = new WebServer({ config: config.server, database, redirectService });
 
 const application = new Application({ database, server });
 

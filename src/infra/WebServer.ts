@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { errorHandler } from '../middleware/ErrorHandler.js';
 import createRedirectRoutes from '../routes/redirect.js';
 import createStatusRoutes from '../routes/status.js';
+import type RedirectService from '../services/RedirectService.js';
 import CommandQueue from './CommandQueue.js';
 import type Database from './Database.js';
 import { logger } from './Logger.js';
@@ -19,12 +20,12 @@ export default class WebServer {
   private readonly commandQueue = new CommandQueue();
   private started = false;
 
-  constructor({ config, database }: { config: WebServerConfig; database: Database }) {
+  constructor({ config, database, redirectService }: { config: WebServerConfig; database: Database; redirectService: RedirectService }) {
     this.config = Object.assign({ host: '0.0.0.0' }, config);
     this.app = new Hono();
     this.app.onError(errorHandler);
-    this.app.route('/__', createStatusRoutes(database));
-    this.app.route('/', createRedirectRoutes({ database }));
+    this.app.route('/__', createStatusRoutes({ database }));
+    this.app.route('/', createRedirectRoutes({ redirectService }));
   }
 
   getApp(): Hono {
