@@ -6,8 +6,8 @@ const nanoid = customAlphabet(alphabet, 8);
 export default class ShortKey {
   private readonly key: string;
 
-  constructor() {
-    this.key = nanoid();
+  constructor(key?: string) {
+    this.key = key ?? nanoid();
   }
 
   toString(): string {

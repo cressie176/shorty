@@ -153,7 +153,7 @@ Automatically expire the redirects when they have not been accessed for a config
 - Update the retrieval process to use a stored procedure which updates the record whenever it is read
 - Update retrieval queries to check the accessed time (do not use codebased checks) to exclude redirects that have not been accessed within one year
 
-### 5. Delete Expired Redirects
+### 6. Delete Expired Redirects
 Automatically delete expired redirects
 
 #### Acceptance Criteria

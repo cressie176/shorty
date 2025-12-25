@@ -24,7 +24,7 @@ export default class WebServer {
     this.app = new Hono();
     this.app.onError(errorHandler);
     this.app.route('/__', createStatusRoutes(database));
-    this.app.route('/', createRedirectRoutes());
+    this.app.route('/', createRedirectRoutes({ database }));
   }
 
   getApp(): Hono {

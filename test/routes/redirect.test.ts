@@ -1,5 +1,5 @@
 import { equal as eq, match, notEqual as neq } from 'node:assert/strict';
-import { after, before, describe, it } from 'node:test';
+import { after, before, beforeEach, describe, it } from 'node:test';
 import Application from '../../src/infra/Application.js';
 import Configuration from '../../src/infra/Configuration.js';
 import { logger } from '../../src/infra/Logger.js';
@@ -11,6 +11,7 @@ import TestDatabase from '../../test-src/TestDatabase.js';
 
 describe('Redirect Routes', () => {
   let application: Application;
+  let database: TestDatabase;
   let client: TestClient;
 
   before(async () => {
@@ -19,13 +20,17 @@ describe('Redirect Routes', () => {
     await initLogging(config.logging);
     await initMigrations(config.database);
 
-    const database = new TestDatabase({ config: config.database });
+    database = new TestDatabase({ config: config.database });
     const server = new WebServer({ config: config.server, database });
 
     application = new Application({ database, server });
     await application.start();
 
     client = new TestClient(`http://localhost:${config.server.port}`);
+  });
+
+  beforeEach(async () => {
+    await database.nuke();
   });
 
   after(async () => {
@@ -66,5 +71,41 @@ describe('Redirect Routes', () => {
     const { body: body2 } = await client.shorten('https://example.com/second');
 
     neq(body1.key, body2.key);
+  });
+
+  it('GET /redirect/:key returns stored redirect', async () => {
+    const { body: shortened } = await client.shorten('https://example.com/path?z=1&a=2');
+
+    const { status, body } = await client.getRedirect(shortened.key);
+
+    eq(status, 200);
+    eq(body.key, shortened.key);
+    eq(body.url, 'https://example.com/path?a=2&z=1');
+  });
+
+  it('GET /redirect/:key returns 404 for unknown key', async () => {
+    const result = await logger.suppress(() => client.getRedirect('unknown-key'));
+
+    eq(result.status, 404);
+    eq(result.body.message, "Redirect for 'unknown-key' not found");
+  });
+
+  it('POST duplicate URL returns same key', async () => {
+    const { body: first } = await client.shorten('https://example.com/duplicate');
+    const { body: second } = await client.shorten('https://example.com/duplicate');
+
+    eq(first.key, second.key);
+    eq(first.url, second.url);
+  });
+
+  it('handles concurrent POST requests for same URL', async () => {
+    const url = 'https://example.com/concurrent';
+
+    const requests = Array.from({ length: 100 }, () => client.shorten(url));
+    const results = await Promise.all(requests);
+
+    const keys = results.map((r) => r.body.key);
+    const uniqueKeys = new Set(keys);
+    eq(uniqueKeys.size, 1);
   });
 });
