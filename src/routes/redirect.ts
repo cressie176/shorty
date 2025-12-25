@@ -34,5 +34,17 @@ export default function createRedirectRoutes({ database }: { database: Database 
     return c.json(redirect);
   });
 
+  app.get('/r/:key', async (c) => {
+    const key = new ShortKey(c.req.param('key'));
+
+    const redirect = await unitOfWork.span('getRedirect', async () => {
+      return await redirectService.getRedirect(key);
+    });
+
+    if (!redirect) throw new NotFoundError({ message: `Redirect for '${key}' not found` });
+
+    return c.redirect(redirect.getUrl().toString());
+  });
+
   return app;
 }

@@ -22,4 +22,11 @@ export default class TestClient {
     const body = (await response.json()) as any;
     return { status: response.status, body };
   }
+
+  async redirect(key: string) {
+    const response = await fetch(`${this.baseUrl}/r/${key}`, {
+      redirect: 'manual',
+    });
+    return { status: response.status, location: response.headers.get('location') };
+  }
 }

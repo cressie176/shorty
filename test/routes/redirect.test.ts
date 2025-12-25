@@ -108,4 +108,47 @@ describe('Redirect Routes', () => {
     const uniqueKeys = new Set(keys);
     eq(uniqueKeys.size, 1);
   });
+
+  it('handles concurrent POST requests for same URL', async () => {
+    let i = 0;
+    const requests = Array.from({ length: 100 }, () => client.shorten(`https://example.com/concurrent/${i++}`));
+    const results = await Promise.all(requests);
+
+    const keys = results.map((r) => r.body.key);
+    const uniqueKeys = new Set(keys);
+    eq(uniqueKeys.size, 100);
+  });
+
+  it('GET /r/:key redirects to canonical URL for known key', async () => {
+    const { body: shortened } = await client.shorten('https://example.com/path?z=1&a=2');
+
+    const { status, location } = await client.redirect(shortened.key);
+
+    eq(status, 302);
+    eq(location, 'https://example.com/path?a=2&z=1');
+  });
+
+  it('GET /r/:key returns 404 for unknown key', async () => {
+    const result = await logger.suppress(() => client.redirect('unknown-key'));
+
+    eq(result.status, 404);
+  });
+
+  it('GET /r/:key handles URL with special characters', async () => {
+    const { body: shortened } = await client.shorten('https://example.com/path?search=hello%20world&foo=bar#section');
+
+    const { status, location } = await client.redirect(shortened.key);
+
+    eq(status, 302);
+    eq(location, 'https://example.com/path?foo=bar&search=hello+world#section');
+  });
+
+  it('GET /r/:key redirect follows canonical URL format', async () => {
+    const { body: shortened } = await client.shorten('https://example.com/test?zebra=1&apple=2&mango=3');
+
+    const { status, location } = await client.redirect(shortened.key);
+
+    eq(status, 302);
+    eq(location, 'https://example.com/test?apple=2&mango=3&zebra=1');
+  });
 });
