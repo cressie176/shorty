@@ -1,6 +1,7 @@
-import { equal as eq, match, notEqual as neq } from 'node:assert/strict';
+import { equal as eq, match, notEqual as neq, rejects } from 'node:assert/strict';
 import { after, before, beforeEach, describe, it } from 'node:test';
 import CanonicalUrl from '../../src/domain/CanonicalUrl.js';
+import { CollisionError } from '../../src/errors/index.js';
 import Configuration from '../../src/infra/Configuration.js';
 import initLogging from '../../src/init/init-logging.js';
 import initMigrations from '../../src/init/init-migrations.js';
@@ -20,7 +21,7 @@ describe('RedirectService', () => {
     database = new TestDatabase({ config: config.database });
     await database.start();
 
-    redirectService = new RedirectService({ database, redirectConfig: config.redirect });
+    redirectService = new RedirectService({ database, config: config.redirect });
   });
 
   beforeEach(async () => {
@@ -125,6 +126,19 @@ describe('RedirectService', () => {
       });
 
       eq(updatedExpiresAt > initialExpiresAt, true);
+    });
+
+    it('throws CollisionError when key collision occurs', async () => {
+      const config = Configuration.load(['config/default.json', 'config/local.json', 'config/test.json']);
+
+      const collisionService = new RedirectService({ database, config: config.redirect, generateKey: () => 'COLLISION' });
+
+      const url1 = new CanonicalUrl('https://example.com/first-collision');
+      const url2 = new CanonicalUrl('https://example.com/second-collision');
+
+      await collisionService.storeRedirect(url1);
+
+      await rejects(async () => await collisionService.storeRedirect(url2), CollisionError);
     });
   });
 

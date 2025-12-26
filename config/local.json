@@ -26,6 +26,6 @@
     }
   },
   "redirect": {
-    "expiryInterval": "10 seconds"
+    "expiry": "10 seconds"
   }
 }

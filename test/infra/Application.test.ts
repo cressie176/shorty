@@ -19,7 +19,7 @@ describe('Application', () => {
     await initMigrations(config.database);
 
     database = new TestDatabase({ config: config.database });
-    const redirectService = new RedirectService({ database, redirectConfig: config.redirect });
+    const redirectService = new RedirectService({ config: config.redirect, database });
     server = new WebServer({ config: config.server, database, redirectService });
     application = new Application({ database, server });
   });

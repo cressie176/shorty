@@ -25,6 +25,6 @@
     "directory": "./migrations"
   },
   "redirect": {
-    "expiryInterval": "1 year"
+    "expiry": "1 year"
   }
 }

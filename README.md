@@ -68,7 +68,7 @@ Configuration is managed through JSON files in the `config/` directory:
     "level": "info"                        // Log level (debug, info, warn, error)
   },
   "redirect": {
-    "expiryInterval": "1 year"             // Redirect expiry interval (PostgreSQL interval syntax)
+    "expiry": "1 year"                     // Redirect expiry interval (PostgreSQL interval syntax)
   }
 }
 ```

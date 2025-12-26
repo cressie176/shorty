@@ -12,7 +12,7 @@ await initLogging(config.logging);
 await initMigrations(config.database);
 
 const database = new Database({ config: config.database });
-const redirectService = new RedirectService({ database, redirectConfig: config.redirect });
+const redirectService = new RedirectService({ config: config.redirect, database });
 const server = new WebServer({ config: config.server, database, redirectService });
 
 const application = new Application({ database, server });

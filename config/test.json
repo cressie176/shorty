@@ -12,6 +12,6 @@
     "level": "warning"
   },
   "redirect": {
-    "expiryInterval": "1 second"
+    "expiry": "1 second"
   }
 }
