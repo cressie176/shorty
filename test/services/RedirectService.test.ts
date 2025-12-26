@@ -138,7 +138,7 @@ describe('RedirectService', () => {
 
       await collisionService.storeRedirect(url1);
 
-      await rejects(async () => await collisionService.storeRedirect(url2), CollisionError);
+      await rejects(collisionService.storeRedirect(url2), CollisionError);
     });
   });
 

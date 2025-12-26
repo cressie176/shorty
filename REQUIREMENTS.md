@@ -93,14 +93,6 @@ POST /redirect
 }
 ```
 
-*409 Conflict*
-```json
-{
-  "message": "Collision detected for key 'ABC123'",
-  "code": "KEY_COLLISION"
-}
-```
-
 #### Implementation Notes
 - This story focuses on the domain logic for generating short keys and canonicalising URLs
 - Persistence is not required in this story - it will be added in Story 3
@@ -165,7 +157,6 @@ GET /redirect/:key
 - The canonical URL must be unique
 - When inserting new redirects tolerate duplicate URLs by using an upsert operation
   This ensures that if a URL already exists, the existing redirect is returned rather than creating a duplicate
-- When inserting new redirects, if a duplicate short key is detected (different URL with same key), allow the database constraint to fail naturally, resulting in a PostgreSQL unique constraint violation error. This error should be caught and re-thrown as a domain-specific error indicating a key collision
 - Write a concurrency test to verify that multiple simultaneous requests to shorten the same URL result in the same redirect being returned without errors
 - Use node-pg rather than an ORM
 - Use marv with marv-pg-driver for PostgreSQL migrations
@@ -180,7 +171,6 @@ GET /redirect/:key
 - Method: `storeRedirect(key: string, url: CanonicalUrl): Promise<Redirect>`
   - Upserts a redirect into the database
   - If the URL already exists, returns the existing redirect
-  - If the key already exists with a different URL, throws a key collision error
 - Method: `getRedirect(key: string): Promise<Redirect | null>`
   - Retrieves a redirect by its key
   - Returns null if not found
@@ -191,7 +181,6 @@ Redirect requests for a short key to the canonicalised URL
 #### Acceptance Criteria
 - Redirects HTTP requests for a known short key to the canonicalised URL using a 302 Found status
 - Responds with 404 for unknown short keys
-- When storing redirects, if a key collision occurs (same key generated for different URLs), the system must detect this and handle it appropriately (this should be extremely rare given proper key generation)
 - The README covers the API, behaviour and configuration up to this point
 
 #### API Specification
@@ -219,7 +208,41 @@ Location: https://example.com/path?a=2&z=1
   - If found, responds with 302 Found status and sets the Location header to the canonical URL
   - If not found, responds with 404 Not Found and an appropriate error message
 
-### 5. Expire Redirects
+### 5. Handle Key Collisions
+Detect and handle the extremely rare case where the same short key is generated for different URLs
+
+#### Acceptance Criteria
+- When storing redirects, if a key collision occurs (same key generated for different URLs), respond with 409 Conflict
+- The collision detection must work correctly even under high concurrency
+- The error message must include the colliding key
+- The README covers the API, behaviour and configuration up to this point
+
+#### API Specification
+
+Update POST /redirect to include:
+
+*409 Conflict*
+```json
+{
+  "message": "Collision detected for key 'ABC123'",
+  "code": "KEY_COLLISION"
+}
+```
+
+#### Implementation Notes
+
+- Create a `CollisionError` class that extends `ApplicationError` with status 409 and code 'KEY_COLLISION'
+- When inserting new redirects, if a duplicate short key is detected (different URL with same key), the database unique constraint on the primary key will fail
+- Catch the PostgreSQL unique constraint violation error (code '23505' on constraint 'redirect_pkey')
+- Re-throw as a `CollisionError` with message format: `"Collision detected for key '{key}'"`
+- The existing `ErrorHandler` middleware will automatically convert this to a 409 response
+- To enable testing of collision scenarios, refactor `RedirectService` to accept an optional `generateKey` function parameter
+  - This allows tests to inject a deterministic key generator that produces collisions
+  - Default to the standard nanoid-based key generator in production
+- Write a test that injects a fixed key generator, stores a redirect, then attempts to store a different URL with the same key
+- Verify that `CollisionError` is thrown and would result in a 409 response
+
+### 6. Expire Redirects
 Automatically expire the redirects when they have not been accessed for a configurable period of time
 
 #### Acceptance Criteria
@@ -248,7 +271,7 @@ Automatically expire the redirects when they have not been accessed for a config
   - Returns nothing if the redirect is not found or has expired
 - All redirect retrieval queries must use database-level checks (WHERE clauses or stored procedure logic) to exclude expired redirects. Never filter expired redirects in application code
 
-### 6. Delete Expired Redirects
+### 7. Delete Expired Redirects
 Automatically delete expired redirects
 
 #### Acceptance Criteria
@@ -265,7 +288,7 @@ Automatically delete expired redirects
 - In tests, invoke the stored procedure directly to verify deletion behaviour. Trust that pg_cron scheduling is configured correctly in production
 - The stored procedure should use appropriate locking or isolation levels to handle concurrent operations safely
 
-### 7. Schedule VACUUM ANALYZE
+### 8. Schedule VACUUM ANALYZE
 Schedule daily VACUUM ANALYZE to maintain PostgreSQL query planner statistics
 
 PostgreSQL only runs autovacuum when the ratio of dead to live tuples reaches a certain threshold. If this service is mostly used by people creating URLs which nobody clicks on (causing the expiry to update), the threshold may never be reached. Without regular statistics updates, PostgreSQL may produce poor query plans that degrade performance.
