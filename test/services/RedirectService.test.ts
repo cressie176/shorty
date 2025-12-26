@@ -209,10 +209,7 @@ describe('RedirectService', () => {
       const notExpired = await redirectService.storeRedirect(url3);
 
       await database.withClient(async (client) => {
-        await client.query("UPDATE redirect SET expires_at = NOW() - INTERVAL '2 seconds' WHERE url IN ($1, $2)", [
-          url1.toString(),
-          url2.toString(),
-        ]);
+        await client.query("UPDATE redirect SET expires_at = NOW() - INTERVAL '2 seconds' WHERE url IN ($1, $2)", [url1.toString(), url2.toString()]);
       });
 
       const deleted = await redirectService.deleteExpiredRedirects();
@@ -242,10 +239,7 @@ describe('RedirectService', () => {
         await client.query("UPDATE redirect SET expires_at = NOW() - INTERVAL '2 seconds' WHERE key = $1", [stored.getKey()]);
       });
 
-      const [, storeResult] = await Promise.all([
-        redirectService.deleteExpiredRedirects(),
-        redirectService.storeRedirect(url),
-      ]);
+      const [, storeResult] = await Promise.all([redirectService.deleteExpiredRedirects(), redirectService.storeRedirect(url)]);
 
       const retrieved = await redirectService.getRedirect(storeResult.getKey());
 
