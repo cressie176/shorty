@@ -1,3 +1,1 @@
-SELECT key, url
-FROM redirect
-WHERE key = $1
+SELECT * FROM get_redirect($1, $2::INTERVAL)

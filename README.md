@@ -182,6 +182,29 @@ In `config/local.json`, migrations are enabled to run automatically:
 }
 ```
 
+### Redirect Expiry Configuration
+
+Redirects automatically expire after a configurable period of inactivity. The expiry period is set in the redirect configuration:
+
+```json
+{
+  "redirect": {
+    "expiry": "1 day"
+  }
+}
+```
+
+**Default** (`config/default.json`): 1 day
+**Production** (`config/production.json`): 1 year
+
+The expiry uses PostgreSQL interval syntax (e.g., "1 day", "1 year", "30 days", "6 months").
+
+**Expiry Behavior:**
+- When a redirect is created, `expires_at` is set to current time + expiry period
+- When a redirect is accessed, both `accessed_at` and `expires_at` are updated (sliding window)
+- Expired redirects return 404 Not Found, even if they exist in the database
+- All expiry checks are performed at the database level for consistency
+
 ## API Endpoints
 
 ### Shorten URL
@@ -240,6 +263,8 @@ This extremely rare case occurs when the same short key is randomly generated fo
 **Behaviour:**
 - Duplicate URLs return the same key (upsert behaviour)
 - Handles concurrent requests for the same URL without creating duplicates
+- Redirects automatically expire after a configurable period of inactivity
+- Accessing a redirect extends its expiry (sliding window expiration)
 
 ### Get URL
 

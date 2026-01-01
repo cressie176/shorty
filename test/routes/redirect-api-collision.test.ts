@@ -21,7 +21,7 @@ describe('Redirect API Collision Handling', () => {
     await initLogging(config.logging);
 
     postgres = new TestPostgres({ config: config.postgres });
-    const collisionConfig = { key: { alphabet: 'A', length: 1 } };
+    const collisionConfig = { key: { alphabet: 'A', length: 1 }, expiry: config.redirect.expiry };
     const redirectService = new RedirectService({ config: collisionConfig, postgres });
     const server = new WebServer({ config: config.server, postgres, redirectService });
 

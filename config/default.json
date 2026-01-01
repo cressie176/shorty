@@ -25,6 +25,7 @@
     "key": {
       "alphabet": "BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz0123456789-",
       "length": 12
-    }
+    },
+    "expiry": "1 day"
   }
 }

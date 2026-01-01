@@ -6,6 +6,7 @@ import * as sql from './redirect-service/index.js';
 
 export interface RedirectConfig {
   key: KeyConfig;
+  expiry: string;
 }
 
 export interface RedirectServiceParams {
@@ -27,7 +28,7 @@ export default class RedirectService {
 
     try {
       const { rows } = await this.postgres.withClient(async (client) => {
-        return client.query(sql.upsertRedirect, [candidate.key, candidate.url]);
+        return client.query(sql.upsertRedirect, [candidate.key, candidate.url, this.config.expiry]);
       });
 
       return Redirect.fromJSON(rows[0]);
@@ -39,7 +40,7 @@ export default class RedirectService {
 
   async getRedirect(key: string): Promise<Redirect> {
     const { rows } = await this.postgres.withClient(async (client) => {
-      return client.query(sql.getRedirect, [key]);
+      return client.query(sql.getRedirect, [key, this.config.expiry]);
     });
 
     if (rows.length === 0) throw new MissingRedirectError(`Redirect for '${key}' not found`);

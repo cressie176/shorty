@@ -112,5 +112,18 @@ describe('Redirect API Routes', () => {
       eq(body.code, 'MISSING_REDIRECT');
       eq(body.message, "Redirect for 'nonexistent' not found");
     });
+
+    it('returns 404 for expired redirect', async () => {
+      const expiredConfig = { key: config.redirect.key, expiry: '-1 second' };
+      const expiredService = new RedirectService({ config: expiredConfig, postgres });
+
+      const created = await expiredService.saveRedirect('https://example.com/expired');
+
+      const { status, body } = await logger.suppress(() => client.getRedirect(created.key));
+
+      eq(status, 404);
+      eq(body.code, 'MISSING_REDIRECT');
+      eq(body.message, `Redirect for '${created.key}' not found`);
+    });
   });
 });
