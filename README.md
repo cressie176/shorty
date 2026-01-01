@@ -184,6 +184,49 @@ In `config/local.json`, migrations are enabled to run automatically:
 
 ## API Endpoints
 
+### Shorten URL
+
+```
+POST /api/redirect
+```
+
+Creates a shortened URL redirect.
+
+**Request Body:**
+```json
+{
+  "url": "https://example.com/path?z=1&a=2"
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "key": "11AAAA",
+  "url": "https://example.com/path?a=2&z=1"
+}
+```
+
+**Validation Response (400 Bad Request):**
+```json
+{
+  "message": "Invalid URL: ''",
+  "code": "VALIDATION_ERROR"
+}
+```
+
+**URL Normalisation:**
+- Query parameters are sorted alphabetically
+- Protocol and host are converted to lowercase
+- Default HTTP (80) and HTTPS (443) ports are removed
+- Text fragments, hashes, sub-domains, and trailing slashes are retained
+- URLs with authentication credentials are rejected
+
+**Key Generation:**
+- Keys are 12 characters long
+- Uses a custom alphabet excluding vowels (to prevent rude words) and underscores
+- Keys are URL-safe and consist of: `BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz0123456789-`
+
 ### Health Check
 
 ```
@@ -210,10 +253,11 @@ Returns service health status. The health check verifies:
 
 ## Error Handling
 
-The template provides a clean separation between application errors and HTTP responses:
+The service provides a clean separation between application errors and HTTP responses:
 
 - `ApplicationError` - Base error class with `code` and `cause` properties
-- `HealthCheckError` (503) - Health check failure error
+- `ValidationError` (400) - Input validation errors
+- `HealthCheckError` (503) - Health check failure errors
 
 The `ErrorHandler` middleware catches all errors and maps error codes to HTTP status codes. Application code throws `ApplicationError` instances, and the ErrorHandler translates them to appropriate HTTP responses.
 

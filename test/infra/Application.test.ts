@@ -3,6 +3,7 @@ import Application from '../../src/infra/Application.js';
 import Configuration from '../../src/infra/Configuration.js';
 import WebServer from '../../src/infra/WebServer.js';
 import initLogging from '../../src/init/init-logging.js';
+import RedirectService from '../../src/services/RedirectService.js';
 import TestPostgres from '../../test-src/TestPostgres.js';
 
 describe('Application', () => {
@@ -16,7 +17,8 @@ describe('Application', () => {
     await initLogging(config.logging);
 
     postgres = new TestPostgres({ config: config.postgres });
-    server = new WebServer({ config: config.server, postgres });
+    const redirectService = new RedirectService(config.redirect);
+    server = new WebServer({ config: config.server, postgres, redirectService });
     application = new Application({ server, postgres });
   });
 
