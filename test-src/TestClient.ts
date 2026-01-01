@@ -16,4 +16,10 @@ export default class TestClient {
     const body = (await response.json()) as any;
     return { status: response.status, body };
   }
+
+  async getRedirect(key: string) {
+    const response = await fetch(`${this.baseUrl}/api/redirect/${key}`);
+    const body = (await response.json()) as any;
+    return { status: response.status, body };
+  }
 }

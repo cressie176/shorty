@@ -23,6 +23,10 @@ export default class Redirect {
     return new Redirect(key, normalised);
   }
 
+  static fromJSON({ key, url }: { key: string; url: string }): Redirect {
+    return new Redirect(key, url);
+  }
+
   toJSON() {
     return {
       key: this.key,

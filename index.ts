@@ -12,7 +12,7 @@ await initLogging(config.logging);
 await initMigrations(config.postgres);
 
 const postgres = new Postgres({ config: config.postgres });
-const redirectService = new RedirectService(config.redirect);
+const redirectService = new RedirectService({ config: config.redirect, postgres });
 const server = new WebServer({ config: config.server, postgres, redirectService });
 
 const application = new Application({ server, postgres });

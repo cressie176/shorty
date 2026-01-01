@@ -17,7 +17,7 @@ describe('Application', () => {
     await initLogging(config.logging);
 
     postgres = new TestPostgres({ config: config.postgres });
-    const redirectService = new RedirectService(config.redirect);
+    const redirectService = new RedirectService({ config: config.redirect, postgres });
     server = new WebServer({ config: config.server, postgres, redirectService });
     application = new Application({ server, postgres });
   });

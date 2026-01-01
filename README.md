@@ -227,6 +227,34 @@ Creates a shortened URL redirect.
 - Uses a custom alphabet excluding vowels (to prevent rude words) and underscores
 - Keys are URL-safe and consist of: `BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz0123456789-`
 
+**Behaviour:**
+- Duplicate URLs return the same key (upsert behaviour)
+- Handles concurrent requests for the same URL without creating duplicates
+
+### Get URL
+
+```
+GET /api/redirect/:key
+```
+
+Retrieves the URL for a given short key.
+
+**Success Response (200 OK):**
+```json
+{
+  "key": "11AAAA",
+  "url": "https://example.com/path?a=2&z=1"
+}
+```
+
+**Not Found Response (404 Not Found):**
+```json
+{
+  "message": "Redirect for 'nonexistent' not found",
+  "code": "MISSING_REDIRECT"
+}
+```
+
 ### Health Check
 
 ```
@@ -257,6 +285,7 @@ The service provides a clean separation between application errors and HTTP resp
 
 - `ApplicationError` - Base error class with `code` and `cause` properties
 - `ValidationError` (400) - Input validation errors
+- `MissingRedirectError` (404) - Redirect not found errors
 - `HealthCheckError` (503) - Health check failure errors
 
 The `ErrorHandler` middleware catches all errors and maps error codes to HTTP status codes. Application code throws `ApplicationError` instances, and the ErrorHandler translates them to appropriate HTTP responses.

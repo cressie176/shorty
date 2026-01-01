@@ -18,7 +18,7 @@ describe('Status Routes', () => {
     await initLogging(config.logging);
 
     const postgres = new TestPostgres({ config: config.postgres });
-    const redirectService = new RedirectService(config.redirect);
+    const redirectService = new RedirectService({ config: config.redirect, postgres });
     const server = new WebServer({ config: config.server, postgres, redirectService });
 
     application = new Application({ server, postgres });

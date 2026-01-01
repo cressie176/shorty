@@ -1,0 +1,8 @@
+BEGIN;
+
+CREATE TABLE redirect (
+  key TEXT PRIMARY KEY,
+  url TEXT NOT NULL UNIQUE
+);
+
+COMMIT;
