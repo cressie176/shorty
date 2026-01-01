@@ -1,4 +1,4 @@
-import { MissingRedirectError } from '../domain/errors/index.js';
+import { KeyCollisionError, MissingRedirectError } from '../domain/errors/index.js';
 import type { KeyConfig } from '../domain/Redirect.js';
 import Redirect from '../domain/Redirect.js';
 import type Postgres from '../infra/Postgres.js';
@@ -25,11 +25,16 @@ export default class RedirectService {
   async saveRedirect(url: string): Promise<Redirect> {
     const candidate = Redirect.fromURL(url, this.config.key);
 
-    const { rows } = await this.postgres.withClient(async (client) => {
-      return client.query(sql.upsertRedirect, [candidate.key, candidate.url]);
-    });
+    try {
+      const { rows } = await this.postgres.withClient(async (client) => {
+        return client.query(sql.upsertRedirect, [candidate.key, candidate.url]);
+      });
 
-    return Redirect.fromJSON(rows[0]);
+      return Redirect.fromJSON(rows[0]);
+    } catch (err: any) {
+      if (err.code === '23505') throw new KeyCollisionError(`Key collision '${candidate.key}'`, err);
+      throw err;
+    }
   }
 
   async getRedirect(key: string): Promise<Redirect> {

@@ -215,6 +215,16 @@ Creates a shortened URL redirect.
 }
 ```
 
+**Conflict Response (409 Conflict):**
+```json
+{
+  "message": "Key collision 'ABC123'",
+  "code": "KEY_COLLISION"
+}
+```
+
+This extremely rare case occurs when the same short key is randomly generated for different URLs.
+
 **URL Normalisation:**
 - Query parameters are sorted alphabetically
 - Protocol and host are converted to lowercase
@@ -315,6 +325,7 @@ The service provides a clean separation between application errors and HTTP resp
 - `ApplicationError` - Base error class with `code` and `cause` properties
 - `ValidationError` (400) - Input validation errors
 - `MissingRedirectError` (404) - Redirect not found errors
+- `KeyCollisionError` (409) - Key collision errors (extremely rare)
 - `HealthCheckError` (503) - Health check failure errors
 
 The `ErrorHandler` middleware catches all errors and maps error codes to HTTP status codes. Application code throws `ApplicationError` instances, and the ErrorHandler translates them to appropriate HTTP responses.

@@ -1,6 +1,6 @@
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import { HealthCheckError, MissingRedirectError, ValidationError } from '../domain/errors/index.js';
+import { HealthCheckError, KeyCollisionError, MissingRedirectError, ValidationError } from '../domain/errors/index.js';
 import { logger } from '../infra/Logger.js';
 
 export function errorHandler(err: Error & { code?: string }, c: Context) {
@@ -17,6 +17,8 @@ function getStatusCode(code: string | undefined): number {
       return 400;
     case MissingRedirectError.code:
       return 404;
+    case KeyCollisionError.code:
+      return 409;
     case HealthCheckError.code:
       return 503;
     default:
