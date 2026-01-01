@@ -207,6 +207,18 @@ The expiry uses PostgreSQL interval syntax (e.g., "1 day", "1 year", "30 days", 
 - Expired redirects are automatically deleted hourly by a scheduled PostgreSQL job
 - Deletions are logged with the count of deleted redirects
 
+### Scheduled Database Maintenance
+
+The service uses pg_cron to schedule automatic database maintenance tasks:
+
+**Hourly (every hour at minute 0):**
+- `delete_expired_redirects()` - Removes expired redirects from the database
+- Logs deletion count via PostgreSQL NOTICE
+
+**Daily (3 AM):**
+- `VACUUM ANALYZE redirect` - Maintains query planner statistics
+- Prevents performance degradation when autovacuum threshold isn't reached
+
 ## API Endpoints
 
 ### Shorten URL
