@@ -1,0 +1,226 @@
+# shorty
+
+[![CI](https://github.com/cressie176/shorty/workflows/CI/badge.svg)](https://github.com/cressie176/shorty/actions)
+
+A URL shortener service with PostgreSQL persistence, automatic expiry, and scheduled maintenance
+
+## Features
+
+- **Node.js + TypeScript** - Modern ES modules with strict TypeScript configuration
+- **Hono Web Framework** - Fast, lightweight web server with type safety
+- **PostgreSQL Database** - PostgreSQL 18 with pg_cron extension for scheduled tasks
+- **Database Migrations** - Marv migration management with automatic local migrations
+- **Structured Logging** - LogTape integration with multiple formatters (JSON, ANSI, pretty)
+- **Configuration Management** - JSON-based config with environment-specific overrides
+- **Error Handling** - Application error framework with HTTP mapping middleware
+- **Lifecycle Management** - Graceful startup/shutdown with signal handling
+- **Testing** - Node.js test runner with integration test support
+- **Code Quality** - Biome for linting and formatting
+- **Git Hooks** - Lefthook for pre-commit linting and testing
+- **CI/CD** - GitHub Actions workflow for automated testing and builds
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 22+
+- npm
+- Docker and Docker Compose (for PostgreSQL)
+
+### Installation
+
+```bash
+npm install
+```
+
+### Database Setup
+
+Start PostgreSQL using Docker Compose:
+
+```bash
+npm run pg:start
+```
+
+This starts two PostgreSQL containers:
+- `shorty-db` (port 5432) - Development database
+- `shorty-db-test` (port 5433) - Test database
+
+#### Migrations
+
+In local development, migrations run automatically when the application starts (configured in `config/local.json`).
+
+For production or staging environments, run migrations manually before deployment:
+
+```bash
+npm run pg:migrate
+```
+
+#### Stopping PostgreSQL
+
+```bash
+npm run pg:stop
+```
+
+### Development
+
+Start the development server with hot reload:
+
+```bash
+npm run dev
+```
+
+The server will start on `http://localhost:3000`.
+
+### Testing
+
+Run all tests:
+
+```bash
+npm test
+```
+
+Run specific tests:
+
+```bash
+npm run test:match <pattern>
+```
+
+### Building
+
+Build for production:
+
+```bash
+npm run build
+```
+
+### Linting
+
+Check code quality:
+
+```bash
+npm run lint
+```
+
+Auto-fix issues:
+
+```bash
+npm run lint:fix
+```
+
+## Project Structure
+
+```
+.
+├── config/                 # Configuration files
+│   ├── default.json       # Default configuration
+│   ├── local.json         # Local overrides (gitignored)
+│   └── test.json          # Test environment config
+├── docker/                # Docker configuration
+│   ├── docker-compose.postgres.yml  # PostgreSQL containers
+│   └── Dockerfile.postgres          # Custom PostgreSQL image
+├── src/
+│   ├── domain/            # Domain models and business logic
+│   │   └── errors/        # Error classes
+│   ├── infra/             # Infrastructure (Application, WebServer, Logger, Postgres)
+│   ├── init/              # Initialization routines (logging, migrations)
+│   ├── middleware/        # HTTP middleware
+│   ├── migrations/        # Database migration scripts
+│   ├── routes/            # HTTP route handlers
+│   └── services/          # Service layer
+├── test/                  # Test files
+├── test-src/              # Test utilities (TestClient, TestPostgres)
+├── index.ts               # Application entry point
+└── package.json
+```
+
+## Configuration
+
+Configuration is loaded from JSON files in the `config/` directory:
+
+1. `default.json` - Base configuration
+2. `local.json` - Local development overrides
+3. `${APP_ENV}.json` - Environment-specific (e.g., `production.json`, `staging.json`)
+4. `secrets.json` - Secrets (gitignored)
+5. `runtime.json` - Runtime overrides (gitignored)
+
+Set the `APP_ENV` environment variable to switch environments (defaults to `local`).
+
+### PostgreSQL Configuration
+
+PostgreSQL connection and migration settings are configured in `config/default.json`:
+
+```json
+{
+  "postgres": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "shorty",
+    "user": "shorty",
+    "password": "shorty",
+    "min": 1,
+    "max": 10,
+    "idleTimeoutMillis": 30000,
+    "connectionTimeoutMillis": 2000,
+    "application_name": "shorty",
+    "migrations": {
+      "apply": false,
+      "directory": "src/migrations"
+    }
+  }
+}
+```
+
+In `config/local.json`, migrations are enabled to run automatically:
+
+```json
+{
+  "postgres": {
+    "migrations": {
+      "apply": true
+    }
+  }
+}
+```
+
+## API Endpoints
+
+### Health Check
+
+```
+GET /__/health
+```
+
+Returns service health status. The health check verifies:
+- PostgreSQL database connectivity
+
+**Success Response (200 OK):**
+```json
+{
+  "message": "OK"
+}
+```
+
+**Failure Response (503 Service Unavailable):**
+```json
+{
+  "message": "Health check failed",
+  "code": "HEALTH_CHECK_ERROR"
+}
+```
+
+## Error Handling
+
+The template provides a clean separation between application errors and HTTP responses:
+
+- `ApplicationError` - Base error class with `code` and `cause` properties
+- `HealthCheckError` (503) - Health check failure error
+
+The `ErrorHandler` middleware catches all errors and maps error codes to HTTP status codes. Application code throws `ApplicationError` instances, and the ErrorHandler translates them to appropriate HTTP responses.
+
+Internal server errors (500) have their messages masked to "Internal Server Error" to avoid leaking infrastructure details. All errors are logged with full details.
+
+To add custom errors, extend `ApplicationError` and add the mapping in `ErrorHandler`.
+
+## License
+
+MIT
