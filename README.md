@@ -204,6 +204,8 @@ The expiry uses PostgreSQL interval syntax (e.g., "1 day", "1 year", "30 days", 
 - When a redirect is accessed, both `accessed_at` and `expires_at` are updated (sliding window)
 - Expired redirects return 404 Not Found, even if they exist in the database
 - All expiry checks are performed at the database level for consistency
+- Expired redirects are automatically deleted hourly by a scheduled PostgreSQL job
+- Deletions are logged with the count of deleted redirects
 
 ## API Endpoints
 
