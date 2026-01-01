@@ -255,6 +255,35 @@ Retrieves the URL for a given short key.
 }
 ```
 
+### Redirect (Browser)
+
+```
+GET /r/:key
+```
+
+Redirects the browser to the normalised URL for the given short key.
+
+**Success Response (301 Moved Permanently):**
+```
+Location: https://example.com/path?a=2&z=1
+```
+
+**Not Found Response (404 Not Found):**
+
+Returns an HTML page with a user-friendly error message:
+
+```html
+<html lang="en">
+  <head>
+    <title>Shorty</title>
+  </head>
+  <body>
+    <h1>Missing Redirect</h1>
+    <div class="error message">Redirect for 'missing-key' not found</div>
+  </body>
+</html>
+```
+
 ### Health Check
 
 ```
