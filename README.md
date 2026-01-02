@@ -229,6 +229,34 @@ Retrieves the redirect information for a given short key.
 }
 ```
 
+### URL Redirection
+
+```
+GET /r/:key
+```
+
+Redirects to the normalised URL associated with the short key using a 301 Moved Permanently status.
+
+**Success Response (301 Moved Permanently):**
+```
+Location: https://example.com/path?a=2&z=1
+```
+
+**Error Response (404 Not Found):**
+
+Returns an HTML page when the redirect doesn't exist:
+```html
+<html lang="en">
+  <head>
+    <title>Shorty</title>
+  </head>
+  <body>
+    <h1>Missing Redirect</h1>
+    <div class="error message">The redirect for 'missing-key' is missing</div>
+  </body>
+</html>
+```
+
 ## Error Handling
 
 The service provides a clean separation between application errors and HTTP responses:

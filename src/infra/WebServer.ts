@@ -2,6 +2,7 @@ import { type ServerType, serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { errorHandler } from '../middleware/ErrorHandler.js';
 import createRedirectRoutes from '../routes/redirect.js';
+import createShortlinkRoutes from '../routes/shortlink.js';
 import createStatusRoutes from '../routes/status.js';
 import type RedirectService from '../services/RedirectService.js';
 import CommandQueue from './CommandQueue.js';
@@ -32,6 +33,7 @@ export default class WebServer {
     this.app.onError(errorHandler);
     this.app.route('/__', createStatusRoutes({ postgres }));
     this.app.route('/api/redirect', createRedirectRoutes({ redirectService }));
+    this.app.route('/r', createShortlinkRoutes({ redirectService }));
   }
 
   getApp(): Hono {
