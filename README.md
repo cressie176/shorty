@@ -205,6 +205,30 @@ Invalid URLs include:
 - URLs with authentication credentials (username/password)
 - Non-HTTP(S) protocols
 
+### Get URL
+
+```
+GET /api/redirect/:key
+```
+
+Retrieves the redirect information for a given short key.
+
+**Success Response (200 OK):**
+```json
+{
+  "key": "AbC123XyZ789",
+  "url": "https://example.com/path?a=2&z=1"
+}
+```
+
+**Error Response (404 Not Found):**
+```json
+{
+  "message": "Redirect for 'nonexistent' not found",
+  "code": "MISSING_REDIRECT"
+}
+```
+
 ## Error Handling
 
 The service provides a clean separation between application errors and HTTP responses:
@@ -212,6 +236,7 @@ The service provides a clean separation between application errors and HTTP resp
 - `ApplicationError` - Base error class with `code` and `cause` properties
 - `HealthCheckError` (503) - Health check failure error
 - `ValidationError` (400) - Invalid input validation error
+- `MissingRedirectError` (404) - Redirect not found error
 
 The `ErrorHandler` middleware catches all errors and maps error codes to HTTP status codes. Application code throws `ApplicationError` instances, and the ErrorHandler translates them to appropriate HTTP responses.
 

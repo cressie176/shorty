@@ -13,5 +13,13 @@ export default function createRedirectRoutes({ redirectService }: { redirectServ
     return c.json({ key: redirect.key, url: redirect.url }, 201);
   });
 
+  app.get('/:key', async (c) => {
+    const key = c.req.param('key');
+
+    const redirect = await redirectService.getRedirect(key);
+
+    return c.json({ key: redirect.key, url: redirect.url });
+  });
+
   return app;
 }

@@ -133,4 +133,26 @@ describe('Redirect Routes', () => {
       eq(body.code, 'VALIDATION_ERROR');
     });
   });
+
+  describe('GET /api/redirect/:key', () => {
+    it('returns redirect for valid key', async () => {
+      const { body: createBody } = await client.post('/api/redirect', {
+        url: 'https://example.com/path',
+      });
+
+      const { status, body } = await client.get(`/api/redirect/${createBody.key}`);
+
+      eq(status, 200);
+      eq(body.key, createBody.key);
+      eq(body.url, 'https://example.com/path');
+    });
+
+    it('responds with 404 for non-existent key', async () => {
+      const { status, body } = await client.get('/api/redirect/nonexistent');
+
+      eq(status, 404);
+      eq(body.message, "Redirect for 'nonexistent' not found");
+      eq(body.code, 'MISSING_REDIRECT');
+    });
+  });
 });

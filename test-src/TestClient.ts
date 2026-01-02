@@ -7,6 +7,12 @@ export default class TestClient {
     return { status: response.status, body };
   }
 
+  async get(path: string) {
+    const response = await fetch(`${this.baseUrl}${path}`);
+    const body = (await response.json()) as any;
+    return { status: response.status, body };
+  }
+
   async post(path: string, data: any) {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
