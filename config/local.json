@@ -1,0 +1,30 @@
+{
+  "logging": {
+    "level": "debug",
+    "formatter": "pretty",
+    "formatters": {
+      "pretty": {
+        "levelColors": {
+          "debug": "blue",
+          "info": "white",
+          "warning": "yellow",
+          "error": "red",
+          "fatal": "magenta"
+        },
+        "levelStyle": [
+          "bold"
+        ],
+        "categoryWidth": 0,
+        "categoryStyle": [],
+        "categoryColor": "cyan",
+        "messageStyle": [],
+        "messageColor": "white"
+      }
+    }
+  },
+  "postgres": {
+    "migrations": {
+      "apply": true
+    }
+  }
+}
