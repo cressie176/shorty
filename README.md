@@ -142,6 +142,13 @@ Set the `APP_ENV` environment variable to switch environments (defaults to `loca
 
 Redirects automatically expire after a period of inactivity, configured via `redirects.expiryDays` (default: 90 days). The expiry timer resets each time the redirect is accessed via `GET /r/:key`.
 
+### Automatic Cleanup
+
+Expired redirects are automatically deleted from the database by a background cleanup service that runs hourly. The cleanup service:
+- Deletes redirects that have not been accessed within the expiry period
+- Logs the number of deleted redirects
+- Runs immediately on application startup and then every hour
+
 ## API Endpoints
 
 ### Health Check

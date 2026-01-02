@@ -5,6 +5,7 @@ import Configuration from '../../src/infra/Configuration.js';
 import WebServer from '../../src/infra/WebServer.js';
 import initLogging from '../../src/init/init-logging.js';
 import KeyGenerator from '../../src/services/KeyGenerator.js';
+import RedirectCleanupService from '../../src/services/RedirectCleanupService.js';
 import RedirectService from '../../src/services/RedirectService.js';
 import UrlValidator from '../../src/services/UrlValidator.js';
 import TestClient from '../../test-src/TestClient.js';
@@ -25,8 +26,9 @@ describe('Redirect Routes', () => {
     const keyGenerator = new KeyGenerator();
     const redirectService = new RedirectService({ postgres, urlValidator, keyGenerator, expiryDays: 90 });
     const server = new WebServer({ config: config.server, postgres, redirectService });
+    const cleanupService = new RedirectCleanupService({ postgres, expiryDays: 90 });
 
-    application = new Application({ postgres, server });
+    application = new Application({ postgres, server, cleanupService });
     await application.start();
 
     client = new TestClient(`http://localhost:${config.server.port}`);

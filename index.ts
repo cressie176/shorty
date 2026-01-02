@@ -4,6 +4,7 @@ import Postgres from './src/infra/Postgres.js';
 import WebServer from './src/infra/WebServer.js';
 import initLogging from './src/init/init-logging.js';
 import KeyGenerator from './src/services/KeyGenerator.js';
+import RedirectCleanupService from './src/services/RedirectCleanupService.js';
 import RedirectService from './src/services/RedirectService.js';
 import UrlValidator from './src/services/UrlValidator.js';
 
@@ -15,8 +16,9 @@ const postgres = new Postgres({ config: config.postgres });
 const urlValidator = new UrlValidator();
 const keyGenerator = new KeyGenerator();
 const redirectService = new RedirectService({ postgres, urlValidator, keyGenerator, expiryDays: config.redirects.expiryDays });
+const cleanupService = new RedirectCleanupService({ postgres, expiryDays: config.redirects.expiryDays });
 const server = new WebServer({ config: config.server, postgres, redirectService });
-const application = new Application({ postgres, server });
+const application = new Application({ postgres, server, cleanupService });
 
 ['SIGINT', 'SIGTERM'].forEach((signal) => {
   process.on(signal, async () => {

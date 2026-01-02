@@ -4,6 +4,7 @@ import Configuration from '../../src/infra/Configuration.js';
 import WebServer from '../../src/infra/WebServer.js';
 import initLogging from '../../src/init/init-logging.js';
 import KeyGenerator from '../../src/services/KeyGenerator.js';
+import RedirectCleanupService from '../../src/services/RedirectCleanupService.js';
 import RedirectService from '../../src/services/RedirectService.js';
 import UrlValidator from '../../src/services/UrlValidator.js';
 import TestPostgres from '../../test-src/TestPostgres.js';
@@ -22,8 +23,9 @@ describe('Application', () => {
     const urlValidator = new UrlValidator();
     const keyGenerator = new KeyGenerator();
     const redirectService = new RedirectService({ postgres, urlValidator, keyGenerator, expiryDays: 90 });
+    const cleanupService = new RedirectCleanupService({ postgres, expiryDays: 90 });
     server = new WebServer({ config: config.server, postgres, redirectService });
-    application = new Application({ postgres, server });
+    application = new Application({ postgres, server, cleanupService });
   });
 
   afterEach(async () => {
