@@ -1,7 +1,9 @@
 import { type ServerType, serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { errorHandler } from '../middleware/ErrorHandler.js';
+import createRedirectRoutes from '../routes/redirect.js';
 import createStatusRoutes from '../routes/status.js';
+import type RedirectService from '../services/RedirectService.js';
 import CommandQueue from './CommandQueue.js';
 import { logger } from './Logger.js';
 import type Postgres from './Postgres.js';
@@ -14,6 +16,7 @@ export interface WebServerConfig {
 export interface WebServerParams {
   config: WebServerConfig;
   postgres: Postgres;
+  redirectService: RedirectService;
 }
 
 export default class WebServer {
@@ -23,11 +26,12 @@ export default class WebServer {
   private readonly commandQueue = new CommandQueue();
   private started = false;
 
-  constructor({ config, postgres }: WebServerParams) {
+  constructor({ config, postgres, redirectService }: WebServerParams) {
     this.config = Object.assign({ host: '0.0.0.0' }, config);
     this.app = new Hono();
     this.app.onError(errorHandler);
     this.app.route('/__', createStatusRoutes({ postgres }));
+    this.app.route('/api/redirect', createRedirectRoutes({ redirectService }));
   }
 
   getApp(): Hono {

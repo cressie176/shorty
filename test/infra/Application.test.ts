@@ -3,6 +3,9 @@ import Application from '../../src/infra/Application.js';
 import Configuration from '../../src/infra/Configuration.js';
 import WebServer from '../../src/infra/WebServer.js';
 import initLogging from '../../src/init/init-logging.js';
+import KeyGenerator from '../../src/services/KeyGenerator.js';
+import RedirectService from '../../src/services/RedirectService.js';
+import UrlValidator from '../../src/services/UrlValidator.js';
 import TestPostgres from '../../test-src/TestPostgres.js';
 
 describe('Application', () => {
@@ -16,7 +19,10 @@ describe('Application', () => {
     await initLogging(config.logging);
 
     postgres = new TestPostgres({ config: config.postgres });
-    server = new WebServer({ config: config.server, postgres });
+    const urlValidator = new UrlValidator();
+    const keyGenerator = new KeyGenerator();
+    const redirectService = new RedirectService({ postgres, urlValidator, keyGenerator });
+    server = new WebServer({ config: config.server, postgres, redirectService });
     application = new Application({ postgres, server });
   });
 

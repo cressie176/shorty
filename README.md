@@ -165,12 +165,53 @@ Returns service health status. The health check validates that the database conn
 
 When the health check fails (e.g., database connection fails), the detailed error is logged to application logs but only a generic 'Service Unavailable' message is returned to avoid leaking infrastructure details.
 
+### Shorten URL
+
+```
+POST /api/redirect
+Content-Type: application/json
+
+{
+  "url": "https://example.com/path?z=1&a=2"
+}
+```
+
+Creates a short redirect key for the given URL. URLs are normalised before storage:
+- Protocol and host are converted to lowercase
+- Default HTTP (80) and HTTPS (443) ports are removed
+- Query parameters are sorted alphabetically
+- Hashes, subdomains, paths, and trailing slashes are retained
+
+The generated key is 12 characters long, URL-safe, and does not contain rude words.
+
+**Success Response (201 Created):**
+```json
+{
+  "key": "AbC123XyZ789",
+  "url": "https://example.com/path?a=2&z=1"
+}
+```
+
+**Error Response (400 Bad Request):**
+```json
+{
+  "message": "Invalid URL: 'not-a-valid-url'",
+  "code": "VALIDATION_ERROR"
+}
+```
+
+Invalid URLs include:
+- Malformed URLs
+- URLs with authentication credentials (username/password)
+- Non-HTTP(S) protocols
+
 ## Error Handling
 
 The service provides a clean separation between application errors and HTTP responses:
 
 - `ApplicationError` - Base error class with `code` and `cause` properties
 - `HealthCheckError` (503) - Health check failure error
+- `ValidationError` (400) - Invalid input validation error
 
 The `ErrorHandler` middleware catches all errors and maps error codes to HTTP status codes. Application code throws `ApplicationError` instances, and the ErrorHandler translates them to appropriate HTTP responses.
 
