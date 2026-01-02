@@ -132,6 +132,30 @@ describe('Redirect Routes', () => {
       eq(status, 400);
       eq(body.code, 'VALIDATION_ERROR');
     });
+
+    it('responds with 409 for key collision', async () => {
+      // Create a redirect first
+      await postgres.withClient(async (client) => {
+        await client.query("INSERT INTO redirects (key, url, created_at) VALUES ('testkey123', 'https://example.com', NOW())");
+      });
+
+      // Mock KeyGenerator to return the same key
+      const originalGenerate = KeyGenerator.prototype.generate;
+      KeyGenerator.prototype.generate = () => 'testkey123';
+
+      try {
+        const { status, body } = await client.post('/api/redirect', {
+          url: 'https://different.com',
+        });
+
+        eq(status, 409);
+        eq(body.message, "Collision detected for key 'testkey123'");
+        eq(body.code, 'KEY_COLLISION');
+      } finally {
+        // Restore original method
+        KeyGenerator.prototype.generate = originalGenerate;
+      }
+    });
   });
 
   describe('GET /api/redirect/:key', () => {

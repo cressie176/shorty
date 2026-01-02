@@ -205,6 +205,16 @@ Invalid URLs include:
 - URLs with authentication credentials (username/password)
 - Non-HTTP(S) protocols
 
+**Error Response (409 Conflict):**
+```json
+{
+  "message": "Collision detected for key 'ABC123'",
+  "code": "KEY_COLLISION"
+}
+```
+
+Returned in the extremely rare case where the same key is generated for different URLs.
+
 ### Get URL
 
 ```
@@ -265,6 +275,7 @@ The service provides a clean separation between application errors and HTTP resp
 - `HealthCheckError` (503) - Health check failure error
 - `ValidationError` (400) - Invalid input validation error
 - `MissingRedirectError` (404) - Redirect not found error
+- `KeyCollisionError` (409) - Key collision detected error
 
 The `ErrorHandler` middleware catches all errors and maps error codes to HTTP status codes. Application code throws `ApplicationError` instances, and the ErrorHandler translates them to appropriate HTTP responses.
 

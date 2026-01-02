@@ -1,4 +1,4 @@
-import { MissingRedirectError } from '../domain/errors/index.js';
+import { KeyCollisionError, MissingRedirectError } from '../domain/errors/index.js';
 import type { Redirect } from '../domain/models/Redirect.js';
 import type Postgres from '../infra/Postgres.js';
 import type KeyGenerator from './KeyGenerator.js';
@@ -28,9 +28,17 @@ export default class RedirectService {
     const normalisedUrl = this.urlValidator.normalise(url);
     const key = this.keyGenerator.generate();
 
-    await this.postgres.withClient(async (client) => {
-      await client.query('INSERT INTO redirects (key, url, created_at) VALUES ($1, $2, NOW())', [key, normalisedUrl]);
-    });
+    try {
+      await this.postgres.withClient(async (client) => {
+        await client.query('INSERT INTO redirects (key, url, created_at) VALUES ($1, $2, NOW())', [key, normalisedUrl]);
+      });
+    } catch (err: any) {
+      // PostgreSQL unique violation error code
+      if (err.code === '23505') {
+        throw new KeyCollisionError(key);
+      }
+      throw err;
+    }
 
     return {
       key,
