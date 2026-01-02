@@ -23,7 +23,7 @@ describe('Shortlink Routes', () => {
     postgres = new TestPostgres({ config: config.postgres });
     const urlValidator = new UrlValidator();
     const keyGenerator = new KeyGenerator();
-    const redirectService = new RedirectService({ postgres, urlValidator, keyGenerator });
+    const redirectService = new RedirectService({ postgres, urlValidator, keyGenerator, expiryDays: 90 });
     const server = new WebServer({ config: config.server, postgres, redirectService });
 
     application = new Application({ postgres, server });
@@ -65,6 +65,26 @@ describe('Shortlink Routes', () => {
       const html = await response.text();
       eq(html.includes('<h1>Missing Redirect</h1>'), true);
       eq(html.includes("The redirect for 'nonexistent' is missing"), true);
+    });
+
+    it('returns 404 for expired redirect', async () => {
+      // Create a redirect with an old accessed_at date
+      await postgres.withClient(async (client) => {
+        const pastDate = new Date();
+        pastDate.setDate(pastDate.getDate() - 91); // 91 days ago (expired with 90 day expiry)
+        await client.query("INSERT INTO redirects (key, url, created_at, accessed_at) VALUES ('expiredkey', 'https://example.com', $1, $1)", [pastDate]);
+      });
+
+      const response = await fetch('http://localhost:3001/r/expiredkey', {
+        redirect: 'manual',
+      });
+
+      eq(response.status, 404);
+      eq(response.headers.get('content-type'), 'text/html; charset=UTF-8');
+
+      const html = await response.text();
+      eq(html.includes('<h1>Missing Redirect</h1>'), true);
+      eq(html.includes("The redirect for 'expiredkey' is missing"), true);
     });
   });
 });

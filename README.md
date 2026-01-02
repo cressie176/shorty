@@ -138,6 +138,10 @@ Configuration is loaded from JSON files in the `config/` directory:
 
 Set the `APP_ENV` environment variable to switch environments (defaults to `local`).
 
+### Redirect Expiry
+
+Redirects automatically expire after a period of inactivity, configured via `redirects.expiryDays` (default: 90 days). The expiry timer resets each time the redirect is accessed via `GET /r/:key`.
+
 ## API Endpoints
 
 ### Health Check
@@ -245,7 +249,9 @@ Retrieves the redirect information for a given short key.
 GET /r/:key
 ```
 
-Redirects to the normalised URL associated with the short key using a 301 Moved Permanently status.
+Redirects to the normalised URL associated with the short key using a 301 Moved Permanently status. Updates the redirect's access time to reset the expiry period.
+
+Redirects automatically expire after a configurable period of inactivity (default: 90 days). Each access resets the expiry timer.
 
 **Success Response (301 Moved Permanently):**
 ```
@@ -254,7 +260,7 @@ Location: https://example.com/path?a=2&z=1
 
 **Error Response (404 Not Found):**
 
-Returns an HTML page when the redirect doesn't exist:
+Returns an HTML page when the redirect doesn't exist or has expired:
 ```html
 <html lang="en">
   <head>

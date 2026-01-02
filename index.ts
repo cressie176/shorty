@@ -14,7 +14,7 @@ await initLogging(config.logging);
 const postgres = new Postgres({ config: config.postgres });
 const urlValidator = new UrlValidator();
 const keyGenerator = new KeyGenerator();
-const redirectService = new RedirectService({ postgres, urlValidator, keyGenerator });
+const redirectService = new RedirectService({ postgres, urlValidator, keyGenerator, expiryDays: config.redirects.expiryDays });
 const server = new WebServer({ config: config.server, postgres, redirectService });
 const application = new Application({ postgres, server });
 

@@ -23,7 +23,7 @@ describe('Redirect Routes', () => {
     postgres = new TestPostgres({ config: config.postgres });
     const urlValidator = new UrlValidator();
     const keyGenerator = new KeyGenerator();
-    const redirectService = new RedirectService({ postgres, urlValidator, keyGenerator });
+    const redirectService = new RedirectService({ postgres, urlValidator, keyGenerator, expiryDays: 90 });
     const server = new WebServer({ config: config.server, postgres, redirectService });
 
     application = new Application({ postgres, server });
@@ -136,7 +136,7 @@ describe('Redirect Routes', () => {
     it('responds with 409 for key collision', async () => {
       // Create a redirect first
       await postgres.withClient(async (client) => {
-        await client.query("INSERT INTO redirects (key, url, created_at) VALUES ('testkey123', 'https://example.com', NOW())");
+        await client.query("INSERT INTO redirects (key, url, created_at, accessed_at) VALUES ('testkey123', 'https://example.com', NOW(), NOW())");
       });
 
       // Mock KeyGenerator to return the same key

@@ -10,6 +10,7 @@ export default function createShortlinkRoutes({ redirectService }: { redirectSer
     try {
       const key = c.req.param('key');
       const redirect = await redirectService.getRedirect(key);
+      await redirectService.updateAccessTime(key);
       return c.redirect(redirect.url, 301);
     } catch (err) {
       if (err instanceof MissingRedirectError) {
