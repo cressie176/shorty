@@ -149,6 +149,13 @@ Expired redirects are automatically deleted from the database by a background cl
 - Logs the number of deleted redirects
 - Runs immediately on application startup and then every hour
 
+### Database Maintenance
+
+PostgreSQL maintenance is handled automatically via pg_cron:
+- VACUUM ANALYZE runs daily at 3am on the redirects table
+- Maintains query planner statistics for optimal performance
+- Configured during database migrations
+
 ## API Endpoints
 
 ### Health Check
